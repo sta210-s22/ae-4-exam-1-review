@@ -42,24 +42,66 @@ tips <- read_csv("data/tip-data.csv")
 1.  Visualize, summarize, and describe the relationship between `Party` and `Tip`.
 
 ```{r}
-# add your code here
+ggplot(tips, aes(x = Party, y = Tip)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+
+corr_coef <- tips %>%
+  summarize(r = cor(Party, Tip)) %>%
+  pull(r)
+
+summary_stats <- tips %>%
+  summarize(
+    mean_x = mean(Party),
+    mean_y = mean(Tip),
+    r = cor(Party, Tip)
+    )
+
+corr_coef <- summary_stats %>% pull(r)
 ```
+
+The relationship between Party and Tip is linear, moderately strong, and positive.
+The correlation coefficient between these variables is `r round(corr_coef, 2)`.
 
 ## Modeling
 
-Let's start by fitting a model using `Party` to predict the `Tips` at this restaurant.
+Let's start by fitting a model using `Party` to predict the `Tip` at this restaurant.
 
 2.  Write the statistical model.
 
-3.  Fit the regression line and write the regression equation. Name the model `tips_fit` and display the results with `kable()` and a reasonable number of digits.
+$$
+Tip = \beta_0 + \beta_1 \times Party
+$$
+
+$$
+\hat{Tip} = \hat{\beta_0} + \hat{\beta}_1 \times Party
+$$
+
+Tip = beta_0 + beta_1 \* Party
+
+Tip = beta_0\_hat + beta_1\_hat \* Party + e
+
+Tip_hat = beta_0\_hat + beta_1\_hat \* Party
+
+2.  Fit the regression line and write the regression equation. Name the model `tips_fit` and display the results with `kable()` and a reasonable number of digits.
 
 ```{r}
-# add your code here
+tips_fit <- linear_reg() %>%
+  set_engine("lm") %>%
+  fit(Tip ~ Party, data = tips)
+
+tidy(tips_fit) %>%
+  kable(digits = 2)
 ```
+
+$$
+\hat{Tip} = 0.38 + 1.96 \times Party
+$$
 
 4.  Interpret the slope.
 
-5.  Does it make sense to interpret the intercept? Explain your reasoning.
+5.  Does it make sense to interpret the intercept?
+    Explain your reasoning.
 
 ## Inference
 
@@ -74,6 +116,12 @@ boot_dist <- tips %>%
   specify(Tip ~ Party) %>%
   generate(reps = 100, type = "bootstrap") %>%
   fit()
+
+tips %>%
+  specify(Tip ~ Party) %>%
+  generate(reps = 100, type = "bootstrap") %>%
+  ggplot(aes(x = Party, y = Tip, group = replicate)) +
+  geom_smooth(method = "lm", se = FALSE, alpha = 0.1, size = 0.2)
 ```
 
 7.  Use the bootstrap distribution created in Exercise 6, `boot_dist`, to construct a 90% confidence interval for the slope using bootstrapping and the percentile method and interpret it in context of the data.
@@ -114,7 +162,9 @@ boot_dist <- tips %>%
 # add your code here
 ```
 
-13. Suppose you're asked to construct a confidence and a prediction interval for your finding in Exercise 11. Which one would you expect to be wider and why? In your answer clearly state the difference between these intervals.
+13. Suppose you're asked to construct a confidence and a prediction interval for your finding in Exercise 11.
+    Which one would you expect to be wider and why?
+    In your answer clearly state the difference between these intervals.
 
 14. Now construct the intervals from Exercise 12 and comment on whether your guess is confirmed.
 
